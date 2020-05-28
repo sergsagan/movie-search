@@ -117,7 +117,7 @@ tvShowsList.addEventListener('click', (event) => {
 
     if (card) {
         new DBService().getTvShow(card.id)
-            .then(({ poster_path: posterPath, name: title, genres, vote_average: voteAverage, overview, homepage }) => {
+            .then(({ poster_path: posterPath, name: title, genres, vote_average, overview, homepage }) => {
                 tvCardImg.src = IMG_PATH + posterPath;
                 tvCardImg.alt = title;
                 modalTitle.textContent = title;
@@ -125,7 +125,7 @@ tvShowsList.addEventListener('click', (event) => {
                 for (const item of genres) {
                     genresList.innerHTML += `<li>${item.name}</li>`;
                 }
-                rating.textContent = voteAverage;
+                rating.textContent = vote_average;
                 description.textContent = overview;
                 modalLink.href = homepage;
             })
