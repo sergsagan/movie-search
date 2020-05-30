@@ -14,7 +14,10 @@ const leftMenu = document.querySelector('.left-menu'),
     description = document.querySelector('.description'),
     modalLink = document.querySelector('.modal__link'),
     searchForm = document.querySelector('.search__form'),
-    searchFormInput = document.querySelector('.search__form-input');
+    searchFormInput = document.querySelector('.search__form-input'),
+    preLoader = document.querySelector('.preloader'),
+    dropdown = document.querySelectorAll('.dropdown');
+
 //лоадер
 const loading = document.createElement('div');
 loading.className = 'loading';
@@ -83,20 +86,25 @@ searchForm.addEventListener('submit', (event) => {
 });
 
 //открытие закрытие меню
+const closeDropdown = () => {
+    dropdown.forEach(item => {
+        item.classList.remove('active');
+    })
+}
 hamburger.addEventListener('click', () => {
     leftMenu.classList.toggle('openMenu');
     hamburger.classList.toggle('open');
+    closeDropdown();
 });
-
 document.addEventListener('click', (event) => {
     const target = event.target;
 
     if (!target.closest('.left-menu')) {
         leftMenu.classList.remove('openMenu');
         hamburger.classList.remove('open');
+        closeDropdown();
     }
 });
-
 leftMenu.addEventListener('click', (event) => {
     event.preventDefault();
     const target = event.target;
@@ -116,6 +124,8 @@ tvShowsList.addEventListener('click', (event) => {
     const card = target.closest('.tv-card');
 
     if (card) {
+        preLoader.style.display = 'block';
+
         new DBService().getTvShow(card.id)
             .then(({ poster_path: posterPath, name: title, genres, vote_average, overview, homepage }) => {
                 tvCardImg.src = IMG_PATH + posterPath;
@@ -132,6 +142,9 @@ tvShowsList.addEventListener('click', (event) => {
             .then(() => {
                 document.body.style.overflow = 'hidden';
                 modal.classList.remove('hide');
+            })
+            .then(() => {
+                preLoader.style.display = '';
             })
     }
 });
