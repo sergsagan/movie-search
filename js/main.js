@@ -1,3 +1,5 @@
+'use strict'
+
 const IMG_PATH = 'https://image.tmdb.org/t/p/w185_and_h278_bestv2';
 const SERVER ='https://api.themoviedb.org/3';
 const API_KEY = '92fc89485abf5a896dd72c74c603123d';
@@ -16,33 +18,64 @@ const leftMenu = document.querySelector('.left-menu'),
     searchForm = document.querySelector('.search__form'),
     searchFormInput = document.querySelector('.search__form-input'),
     preLoader = document.querySelector('.preloader'),
-    dropdown = document.querySelectorAll('.dropdown');
+    dropdown = document.querySelectorAll('.dropdown'),
+    tvShowsHead = document.querySelector('.tv-shows__head'),
+    posterWrapper = document.querySelector('.poster__wrapper');
 
 //лоадер
 const loading = document.createElement('div');
 loading.className = 'loading';
 
-//класс, функция запроса
+//класс
 class DBService {
+    //API запрос
     getData = async (url) => {
-        const res = await fetch(url);
-        if (res.ok) {
-            return res.json();
+        tvShows.append(loading);
+        const response = await fetch(url);
+        if (response.ok) {
+            return response.json();
         } else {
             throw new Error(`Не удалось получить данные по адресу ${url}`)
         }
     }
+    //функция запроса поиска
     getSearchResult = (query) => {
         return this.getData(`${SERVER}/search/tv?api_key=${API_KEY}&language=ru-RU&query=${query}`);
     }
+    //функция запроса отображения фильмов по id
     getTvShow = (id) => {
         return this.getData(`${SERVER}/tv/${id}?api_key=${API_KEY}&language=ru-RU`)
     }
+    getTopRated = () => {
+        return this.getData(`${SERVER}/tv/top_rated?api_key=${API_KEY}&language=ru-RU`)
+    }
+    getPopular = () => {
+        return this.getData(`${SERVER}/tv/popular?api_key=${API_KEY}&language=ru-RU`)
+    }
+    getToday = () => {
+        return this.getData(`${SERVER}/tv/airing_today?api_key=${API_KEY}&language=ru-RU`)
+    }
+    getWeek = () => {
+        return this.getData(`${SERVER}/tv/on_the_air?api_key=${API_KEY}&language=ru-RU`)
+    }
 }
 
+const dbService = new DBService();
+
 //формируем карточку
-const renderCard = (response) => {
+const renderCard = (response, target) => {
     tvShowsList.textContent = '';
+
+    if (!response.total_results) {
+        loading.remove();
+        tvShowsHead.textContent = 'К сожалению по вашему запросу ничего не найдено...';
+        tvShowsHead.style.cssText = 'color: red; text-align: center;'
+        return;
+    }
+
+    tvShowsHead.textContent = target ? target.textContent : 'Результат поиска:';
+    tvShowsHead.style.cssText = 'color: black;'
+
     response.results.forEach(item => {
         const {
             backdrop_path: backdrop,
@@ -80,8 +113,7 @@ searchForm.addEventListener('submit', (event) => {
     searchFormInput.value = '';
 
     if (value) {
-        tvShows.append(loading);
-        new DBService().getSearchResult(value).then(renderCard);
+        dbService.getSearchResult(value).then(renderCard);
     }
 });
 
@@ -115,6 +147,18 @@ leftMenu.addEventListener('click', (event) => {
         leftMenu.classList.add('openMenu');
         hamburger.classList.add('open');
     }
+    if (target.closest('#top-rated')) {
+        dbService.getTopRated().then((response) => renderCard(response, target));
+    }
+    if (target.closest('#popular')) {
+        dbService.getPopular().then((response) => renderCard(response, target));
+    }
+    if (target.closest('#today')) {
+        dbService.getToday().then((response) => renderCard(response, target));
+    }
+    if (target.closest('#week')) {
+        dbService.getWeek().then((response) => renderCard(response, target));
+    }
 });
 
 //открытие модального окна
@@ -126,10 +170,15 @@ tvShowsList.addEventListener('click', (event) => {
     if (card) {
         preLoader.style.display = 'block';
 
-        new DBService().getTvShow(card.id)
+        dbService.getTvShow(card.id)
             .then(({ poster_path: posterPath, name: title, genres, vote_average, overview, homepage }) => {
-                tvCardImg.src = IMG_PATH + posterPath;
-                tvCardImg.alt = title;
+                if (posterPath) {
+                    tvCardImg.src = IMG_PATH + posterPath;
+                    tvCardImg.alt = title;
+                    posterWrapper.style.display = '';
+                } else {
+                    posterWrapper.style.display = 'none';
+                }
                 modalTitle.textContent = title;
                 genresList.textContent = '';
                 for (const item of genres) {
@@ -143,7 +192,7 @@ tvShowsList.addEventListener('click', (event) => {
                 document.body.style.overflow = 'hidden';
                 modal.classList.remove('hide');
             })
-            .then(() => {
+            .finally(() => {
                 preLoader.style.display = '';
             })
     }

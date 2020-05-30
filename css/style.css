@@ -407,6 +407,12 @@ main {
     text-transform: uppercase;
 }
 
+.title span {
+    color: #ffc107;
+    font-size: 30px;
+    text-transform: none;
+}
+
 .subtitle {
     font-weight: 300;
     text-transform: uppercase;
