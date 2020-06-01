@@ -177,6 +177,7 @@ leftMenu.addEventListener('click', (event) => {
     if (target.closest('#search')) {
         tvShowsList.textContent = '';
         tvShowsHead.textContent = ''
+        pagination.textContent = ''
     }
 });
 
